@@ -1,0 +1,103 @@
+const { ethers } = require("hardhat");
+const { loadFixture } = require("@nomicfoundation/hardhat-network-helpers");
+
+/*const {
+  time,
+  loadFixture,
+} = require("@nomicfoundation/hardhat-network-helpers");
+const { ethers } = require("hardhat");*/
+//const { expect } = require("chai");
+
+describe("SupplyChain", function () {
+
+	before(async function () {
+		const { expect } = await import("chai");
+		global.expect = expect;
+	});
+
+  async function deploySupplyChainFixture() {
+    const [owner, otherAccount] = await ethers.getSigners();
+    // const [owner] = await ethers.getSigners();
+    // const otherAccount = owner.address;
+
+    const SupplyChain = await ethers.getContractFactory("SupplyChain");
+    const supplyChain = await SupplyChain.deploy();
+
+    return { supplyChain, owner, otherAccount };
+  }
+
+  describe("Deployment", function () {
+    it("Should set the right owner", async function () {
+      const { supplyChain, owner } = await loadFixture(deploySupplyChainFixture);
+
+      expect(await supplyChain.owner()).to.equal(owner.address);
+    });
+
+    it("Should authorize the owner", async function () {
+      const { supplyChain, owner } = await loadFixture(deploySupplyChainFixture);
+
+      expect(await supplyChain.authorizedAddresses(owner.address)).to.be.true;
+    });
+  });
+
+  describe("Product Management", function () {
+    describe("Validations", function () {
+      it("Should revert if an unauthorized address tries to add a product", async function () {
+        const { supplyChain, otherAccount } = await loadFixture(deploySupplyChainFixture);
+
+        await expect(
+          supplyChain.connect(otherAccount).addProduct("Product 1", 100, 10)
+        ).to.be.revertedWith("Unauthorized");
+      });
+      
+      /*await expect(
+          supplyChain.connect(otherAccount).callStatic.addProduct("Product 1", 100, 10)
+        ).to.be.revertedWith("Unauthorized");
+      });*/
+
+      it("Should allow an authorized address to add a product", async function () {
+        const { supplyChain, owner } = await loadFixture(deploySupplyChainFixture);
+
+        await expect(supplyChain.connect(owner).addProduct("Product 1", 100, 10))
+          .to.emit(supplyChain, "ProductAdded")
+          .withArgs(1, "Product 1", 100, 10);
+      });
+    });
+  });
+
+  describe("Order Management", function () {
+    describe("Validations", function () {
+      it("Should revert if the product IDs and quantities arrays have different lengths", async function () {
+        const { supplyChain } = await loadFixture(deploySupplyChainFixture);
+
+        await expect(supplyChain.placeOrder([1], [1, 2])).to.be.revertedWith("Invalid input arrays");
+      });
+
+      it("Should revert if the order includes an invalid product ID", async function () {
+        const { supplyChain } = await loadFixture(deploySupplyChainFixture);
+
+        await expect(supplyChain.placeOrder([1], [1])).to.be.revertedWith("Invalid product ID");
+      });
+
+      it("Should revert if there is insufficient inventory for the order", async function () {
+        const { supplyChain, owner } = await loadFixture(deploySupplyChainFixture);
+
+        await supplyChain.connect(owner).addProduct("Product 1", 100, 5);
+
+        await expect(supplyChain.placeOrder([1], [10])).to.be.revertedWith("Insufficient inventory");
+      });
+
+      it("Should place an order and emit the OrderPlaced event", async function () {
+        const { supplyChain, owner } = await loadFixture(deploySupplyChainFixture);
+
+        await supplyChain.connect(owner).addProduct("Product 1", 100, 10);
+
+        await expect(supplyChain.placeOrder([1], [5], { value: 500 }))
+          .to.emit(supplyChain, "OrderPlaced")
+          .withArgs(1);
+      });
+    });
+  });
+
+  // Add more test cases for other functions as needed
+});

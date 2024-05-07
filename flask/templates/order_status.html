@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Status</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Order Status</h1>
+        <nav>
+            <ul>
+                <li><a href="{{ url_for('home') }}">Home</a></li>
+                <li><a href="{{ url_for('add_product') }}">Add Product</a></li>
+                <li><a href="{{ url_for('list_products') }}">List Products</a></li>
+                <li><a href="{{ url_for('place_order') }}">Place Order</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <h2>Order ID: {{ order_id }}</h2>
+        <p>Status: {{ status }}</p>
+    </main>
+</body>
+</html>

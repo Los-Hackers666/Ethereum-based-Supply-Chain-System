@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Place Order</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Place Order</h1>
+        <nav>
+            <ul>
+                <li><a href="{{ url_for('home') }}">Home</a></li>
+                <li><a href="{{ url_for('add_product') }}">Add Product</a></li>
+                <li><a href="{{ url_for('list_products') }}">List Products</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <form method="POST">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Price</th>
+                        <th>Quantity</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                    <tr>
+                        <td>
+                            <input type="checkbox" name="product_id" value="{{ product.id }}">
+                            {{ product.name }}
+                        </td>
+                        <td>{{ product.price }}</td>
+                        <td><input type="number" name="quantity" value="0" min="0"></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <button type="submit">Place Order</button>
+        </form>
+    </main>
+</body>
+</html>
