@@ -14,11 +14,15 @@
                 <li><a href="{{ url_for('home') }}">Home</a></li>
                 <li><a href="{{ url_for('add_product') }}">Add Product</a></li>
                 <li><a href="{{ url_for('list_products') }}">List Products</a></li>
+                <li><a href="{{ url_for('order_status', order_id=0) }}">Order Status</a></li>
             </ul>
         </nav>
     </header>
     <main>
-        <form method="POST">
+        {% if success_message %}
+        <p>{{ success_message }}</p>
+        {% endif %}
+        <form method="POST" id="order-form">
             <table>
                 <thead>
                     <tr>
@@ -43,5 +47,12 @@
             <button type="submit">Place Order</button>
         </form>
     </main>
+    <script>
+        document.getElementById('order-form').addEventListener('submit', function() {
+            setTimeout(function() {
+                document.getElementById('order-form').reset();
+            }, 1000);
+        });
+    </script>
 </body>
 </html>

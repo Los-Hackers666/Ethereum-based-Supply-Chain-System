@@ -49,8 +49,13 @@ def place_order():
         total_cost = sum(supply_chain.functions.products(product_id).call()[2] * quantity for product_id, quantity in zip(product_ids, quantities))
         tx_hash = supply_chain.functions.placeOrder(product_ids, quantities).transact({'from': account, 'value': total_cost})
         tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
-        order_id = supply_chain.functions.orderCount().call()
-        return redirect(url_for('order_status', order_id=order_id))
+        success_message = "Order placed successfully!"
+        product_count = supply_chain.functions.productCount().call()
+        products = []
+        for i in range(1, product_count + 1):
+            product = supply_chain.functions.listProduct(i).call()
+            products.append({'id': i, 'name': product[0], 'price': product[1], 'stock': product[2]})
+        return render_template('place_order.html', products=products, success_message=success_message)
     product_count = supply_chain.functions.productCount().call()
     products = []
     for i in range(1, product_count + 1):
@@ -58,25 +63,28 @@ def place_order():
         products.append({'id': i, 'name': product[0], 'price': product[1], 'stock': product[2]})
     return render_template('place_order.html', products=products)
 
-@app.route('/order_status/<int:order_id>')
-def order_status(order_id):
-    try:
-        shipment = supply_chain.functions.shipments(order_id).call()
-        if shipment[0] != 0:
-            status = shipment[2]
-            if status == 0:
-                status_str = "In Warehouse"
-            elif status == 1:
-                status_str = "In Transit"
-            elif status == 2:
-                status_str = "Delivered"
+@app.route('/order_status', methods=['GET', 'POST'])
+def order_status():
+    if request.method == 'POST':
+        order_id = int(request.form['order_id'])
+        try:
+            shipment = supply_chain.functions.shipments(order_id).call()
+            if shipment[0] != 0:
+                status = shipment[2]
+                if status == 0:
+                    status_str = "In Warehouse"
+                elif status == 1:
+                    status_str = "In Transit"
+                elif status == 2:
+                    status_str = "Delivered"
+                else:
+                    status_str = "Unknown"
             else:
-                status_str = "Unknown"
-        else:
-            status_str = "Order not found"
-    except Exception as e:
-        status_str = f"Error: {str(e)}"
-    return render_template('order_status.html', order_id=order_id, status=status_str)
+                status_str = "Order not found"
+        except Exception as e:
+            status_str = f"Error: {str(e)}"
+        return render_template('order_status.html', order_id=order_id, status=status_str)
+    return render_template('order_status.html')
 
 if __name__ == '__main__':
     app.run(debug=True)
